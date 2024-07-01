@@ -1,0 +1,63 @@
+device: cuda
+
+# Model config
+Model_name: KELLER
+max_fact_len: 512
+metric_types: "MAP,MRR,P@1,P@3,NDCG@3,NDCG@5,NDCG@10,NDCG@20,NDCG@30"
+
+# Dataset
+LeCaRD_query_path: ./data/LeCaRD/query/query_total.json
+LeCaRD_candidate_path: ./data/LeCaRD/candidates/unique_candidates.json
+LeCaRD_decomposed_query_path: ./data/LeCaRD/query/query_fact.json
+LeCaRD_decomposed_doc_path: ./data/LeCaRD/candidates/doc_fact.json
+
+LeCaRDv2_query_path: ./data/LeCaRDv2/query/query.json
+LeCaRDv2_labeled_query_path: ./data/LeCaRDv2/query/LeCaRDv2_querys_labeled.json
+LeCaRDv2_train_query_path: ./data/LeCaRDv2/query/train_query.jsonl
+LeCaRDv2_test_query_path: ./data/LeCaRDv2/query/test_query.jsonl
+LeCaRDv2_candidate_path: ./data/LeCaRDv2/candidates/ori_candidates/
+LeCaRDv2_decomposed_query_path: ./data/LeCaRDv2/query/query_fact.json
+LeCaRDv2_decomposed_doc_path: ./data/LeCaRDv2/candidates/doc_fact.json
+
+LeCaRD_label_path: ./data/LeCaRD/label/label_top30_dict.json
+LeCaRDv2_label_path: ./data/LeCaRDv2/label/relevence.trec
+PLM_path: /LMs/SAILER
+result_save_path: ./result/KELLER/
+
+hard_negative_num: 0
+negative_cross_device: true
+case_decomposition: true
+LeCaRDv2_bm25_path: ./data/bm25_top1k.json
+
+# huggingface config
+training_args:
+  output_dir: ./result/KELLER/
+  gradient_checkpointing: true
+  overwrite_output_dir: true
+  do_train: true
+  do_eval: true
+  evaluation_strategy: steps
+  eval_steps: 3
+  per_device_train_batch_size: 64
+  per_device_eval_batch_size: 128
+  gradient_accumulation_steps: 1
+  eval_accumulation_steps: 1
+  learning_rate: 1.0e-5
+  num_train_epochs: 10
+  logging_steps: 10
+  save_strategy: steps
+  save_steps: 300
+  save_total_limit: 2
+  seed: 0
+  data_seed: 0
+  fp16: true
+  dataloader_num_workers: 8
+  load_best_model_at_end: true
+  metric_for_best_model: MAP
+  greater_is_better: true
+  optim: adamw_torch
+  label_names:
+    - labels
+  deepspeed: ./config/deepspeed/zero2.json
+  report_to: none
+  remove_unused_columns: false
