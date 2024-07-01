@@ -15,7 +15,7 @@ from tools.Metrics import compute_metrics_normal, save_all_results
 # Arguments Setting
 logging.disable(logging.WARNING)
 parser = argparse.ArgumentParser()
-parser.add_argument('--config_path', default='./config/SAILER.yaml', help='The path of config file')
+parser.add_argument('--config_path', default='./config/KELLER.yaml', help='The path of config file')
 parser.add_argument('--local_rank', default=0)
 parser.add_argument('--hard_negative_num', default=0, type=int)
 parser.add_argument('--test_zeroshot', default=False, type=bool)
