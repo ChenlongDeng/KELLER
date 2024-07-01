@@ -42,13 +42,6 @@ class KELLER(nn.Module):
         self.max_crime_num = args.max_crime_num
         self.negative_cross_device = args.negative_cross_device and dist.is_initialized()
         self.Encoder = AutoModel.from_pretrained(args.PLM_path)
-        
-        self.kernel_mus = torch.tensor(kernel_mu(args.kernel_num)).view(1, 1, 1, 1, 1, args.kernel_num).to(f'cuda:{args.local_rank}')
-        self.kernel_sigmas = torch.tensor(kernel_sigma((args.kernel_num))).view(1, 1, 1, 1, 1, args.kernel_num).to(f'cuda:{args.local_rank}')
-        self.kernel_dense = nn.Linear(args.kernel_num, 1)
-        # self.query_weighted_transformer_layer = nn.TransformerEncoderLayer(d_model=768, nhead=8, dim_feedforward=2048, batch_first=True, norm_first=True)
-        # self.query_weighted_transformer = nn.TransformerEncoder(self.query_weighted_transformer_layer, 1)
-        # self.query_weighted_classifier = nn.Linear(768, 1)
         self.loss_fct = nn.CrossEntropyLoss()
     
     def gradient_checkpointing_enable(self, gradient_checkpointing_kwargs={}):
@@ -77,19 +70,13 @@ class KELLER(nn.Module):
         doc_num_per_query = int(kwargs['doc_input_ids'].shape[0] / (batch_size * self.max_crime_num))
         query_input = {k: kwargs['query_'+k] for k in ['input_ids', 'attention_mask']}
         doc_input = {k: kwargs['doc_'+k].reshape(-1, kwargs['doc_'+k].shape[-1]) for k in ['input_ids', 'attention_mask']}
-        # query_all_crime_input = {k: kwargs['query_all_crime_'+k].reshape(-1, kwargs['query_all_crime_'+k].shape[-1]) for k in ['input_ids', 'attention_mask']}
         query_reps = self.Encoder(**query_input)['last_hidden_state'][:, 0, :].reshape(batch_size, self.max_crime_num, -1) # (bs, seq, emb)
         query_reps = F.normalize(query_reps, p=2, dim=-1)
         doc_reps = self.Encoder(**doc_input)['last_hidden_state'][:, 0, :].reshape(batch_size, -1, self.max_crime_num, query_reps.shape[-1]) # (bs, N, seq, emb)
         doc_reps = F.normalize(doc_reps, p=2, dim=-1)
-        # query_all_crime_reps = self.Encoder(**query_all_crime_input)['last_hidden_state'][:, 0, :].reshape(batch_size, -1)
         
         kwargs['query_seq_mask'] = kwargs['query_seq_mask'].view(batch_size, self.max_crime_num)
         kwargs['doc_seq_mask'] = kwargs['doc_seq_mask'].view(batch_size, -1, self.max_crime_num)
-        # query_weights = self.query_weighted_classifier(self.query_weighted_transformer(query_reps, src_key_padding_mask=~kwargs['query_seq_mask'].bool())).squeeze()
-        # query_weights = torch.softmax(torch.where(kwargs['query_seq_mask'] == 0, -float('inf'), query_weights), dim=-1)
-        # query_weights = torch.matmul(query_reps, query_all_crime_reps[:, :, None]).squeeze()
-        # query_weights = torch.softmax(torch.where(kwargs['query_seq_mask'] == 0, -float('inf'), query_weights), dim=-1)
         if self.training == True:
             # Training Mode
             if self.negative_cross_device:
@@ -113,26 +100,9 @@ class KELLER(nn.Module):
             fine_grained_label = torch.where(kwargs['fine_grained_label'] == -1, fine_grained_max_index, kwargs['fine_grained_label'])
             fine_grained_loss = self.loss_fct(fine_grained_scores[kwargs['query_seq_mask'].view(-1).bool()], fine_grained_label[kwargs['query_seq_mask'].view(-1).bool()].long())
             
-            # kernel pooling
-            # kernel_pooling_scores = torch.exp(-((scores.unsqueeze(-1) - self.kernel_mus) ** 2) / (2 * (self.kernel_sigmas ** 2)))
-            # masked_kernel_pooling_scores = kernel_pooling_scores.masked_fill(~interaction_mask_matrix.unsqueeze(-1), 0)
-            # masked_kernel_pooling_row_sum = masked_kernel_pooling_scores.sum(dim=-2).reshape(batch_size, -1, self.max_crime_num, self.kernel_mus.shape[-1]) # (bs, bs*N, seq, kernel_num)
-            # log_pooling = torch.log(torch.clamp(masked_kernel_pooling_row_sum, min=1e-10)) * 0.01
-            # log_pooling = log_pooling.masked_fill(~kwargs['query_seq_mask'][:, None, :, None].bool(), 0)
-            # log_pooling_sum = torch.sum(log_pooling, dim=-2)
-            # final_scores = torch.tanh(self.kernel_dense(log_pooling_sum)).reshape(batch_size, -1) / 0.01
-            # masked_final_scores = final_scores.masked_fill(~kwargs['contrastive_mask'].bool(), -float('inf'))
-            
-            # mean pooling
-            # masked_scores = scaled_scores.masked_fill(~interaction_mask_matrix, float('nan'))
-            # mean_scores = torch.nanmean(masked_scores, dim=-1)
-            # final_scores = torch.nanmean(mean_scores, dim=-1).reshape(batch_size, -1)
-            
             # maxsim
             max_scores = torch.max(masked_scores, dim=-1)[0]
             final_scores = torch.where(max_scores == -float('inf'), torch.zeros_like(max_scores), max_scores).sum(dim=-1)
-            # final_scores = torch.where(max_scores == -float('inf'), torch.zeros_like(max_scores), max_scores).reshape(batch_size, -1, self.max_crime_num) * query_weights[:, None, :]
-            # final_scores = final_scores.sum(dim=-1)
             final_scores = final_scores.reshape(batch_size, -1)
             masked_final_scores = final_scores.masked_fill(~kwargs['contrastive_mask'].bool(), -float('inf'))
             if final_scores.shape[-1] == batch_size:
@@ -148,24 +118,9 @@ class KELLER(nn.Module):
             interaction_mask_matrix = torch.bmm(kwargs['query_seq_mask'].unsqueeze(2), kwargs['doc_seq_mask']).bool()
             scores = torch.bmm(query_reps, doc_reps.squeeze(1).transpose(1,2)) # (bs, seq, seq)
             
-            # kernel pooling
-            # kernel_pooling_scores = torch.exp(-((scores.unsqueeze(-1) - self.kernel_mus.reshape(1, 1, 1, -1)) ** 2) / (2 * (self.kernel_sigmas.reshape(1, 1, 1, -1) ** 2)))
-            # masked_kernel_pooling_scores = kernel_pooling_scores.masked_fill(~interaction_mask_matrix.unsqueeze(-1), 0)
-            # masked_kernel_pooling_row_sum = masked_kernel_pooling_scores.sum(dim=-2) # (bs, seq, kernel_num)
-            # log_pooling = torch.log(torch.clamp(masked_kernel_pooling_row_sum, min=1e-10)) * 0.01
-            # log_pooling = log_pooling.masked_fill(~kwargs['query_seq_mask'][:, :, None].bool(), 0)
-            # log_pooling_sum = torch.sum(log_pooling, dim=-2)
-            # final_scores = torch.tanh(self.kernel_dense(log_pooling_sum)).squeeze()
-            
-            # mean pooling
-            # masked_scores = scores.masked_fill(~interaction_mask_matrix, float('nan'))
-            # mean_scores = torch.nanmean(masked_scores, dim=-1)
-            # final_scores = torch.nanmean(mean_scores, dim=-1)
-            
             masked_scores = scores.masked_fill(~interaction_mask_matrix, -float('inf'))
             max_scores = torch.max(masked_scores, dim=-1)[0]
             final_scores = torch.where(max_scores == -float('inf'), torch.zeros_like(max_scores), max_scores)
-            # final_scores = torch.where(max_scores == -float('inf'), torch.zeros_like(max_scores), max_scores) * query_weights
             final_scores = final_scores.sum(dim=-1)
             return {
                 'loss': torch.tensor(0, dtype=torch.float, device=query_reps.device),
