@@ -23,7 +23,7 @@ bash run.sh
 ```
 
 ## Data
-Most of the data has been released at this repo, and others can be found (or processed) by:
+Most of the data has been released in this repo, and others can be found (or processed) by:
 
 - The `unique_candidates.json` of the LeCaRD dataset can been easily produced by merging docs according to their doc_ids.
 - The `ori_candidates` dir is the original candidate dir of the LeCaRDv2 dataset.
