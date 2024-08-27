@@ -30,13 +30,21 @@ Most of the data has been released in this repo, and others can be found (or pro
 
 ## Citation
 ```
-@misc{deng2024learninginterpretablelegalcase,
-      title={Learning Interpretable Legal Case Retrieval via Knowledge-Guided Case Reformulation}, 
-      author={Chenlong Deng and Kelong Mao and Zhicheng Dou},
-      year={2024},
-      eprint={2406.19760},
-      archivePrefix={arXiv},
-      primaryClass={cs.IR},
-      url={https://arxiv.org/abs/2406.19760}, 
+@article{DBLP:journals/corr/abs-2406-19760,
+  author       = {Chenlong Deng and
+                  Kelong Mao and
+                  Zhicheng Dou},
+  title        = {Learning Interpretable Legal Case Retrieval via Knowledge-Guided Case
+                  Reformulation},
+  journal      = {CoRR},
+  volume       = {abs/2406.19760},
+  year         = {2024},
+  url          = {https://doi.org/10.48550/arXiv.2406.19760},
+  doi          = {10.48550/ARXIV.2406.19760},
+  eprinttype    = {arXiv},
+  eprint       = {2406.19760},
+  timestamp    = {Wed, 24 Jul 2024 22:02:55 +0200},
+  biburl       = {https://dblp.org/rec/journals/corr/abs-2406-19760.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
 }
 ```
