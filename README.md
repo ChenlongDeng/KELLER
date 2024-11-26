@@ -1,5 +1,5 @@
 <div align="center">
-<h1>Learning Interpretable Legal Case Retrieval via Knowledge-Guided Case Reformulation[<a href="https://arxiv.org/abs/2406.19760">Paper</a>]</h1>
+<h1>Learning Interpretable Legal Case Retrieval via Knowledge-Guided Case Reformulation[<a href="https://aclanthology.org/2024.emnlp-main.73/">Paper</a>]</h1>
 <img src="./imgs/KELLER.png" width="80%" class="center">
 </div>
 
@@ -30,21 +30,21 @@ Most of the data has been released in this repo, and others can be found (or pro
 
 ## Citation
 ```
-@article{DBLP:journals/corr/abs-2406-19760,
-  author       = {Chenlong Deng and
-                  Kelong Mao and
-                  Zhicheng Dou},
-  title        = {Learning Interpretable Legal Case Retrieval via Knowledge-Guided Case
-                  Reformulation},
-  journal      = {CoRR},
-  volume       = {abs/2406.19760},
-  year         = {2024},
-  url          = {https://doi.org/10.48550/arXiv.2406.19760},
-  doi          = {10.48550/ARXIV.2406.19760},
-  eprinttype    = {arXiv},
-  eprint       = {2406.19760},
-  timestamp    = {Wed, 24 Jul 2024 22:02:55 +0200},
-  biburl       = {https://dblp.org/rec/journals/corr/abs-2406-19760.bib},
-  bibsource    = {dblp computer science bibliography, https://dblp.org}
+@inproceedings{deng-etal-2024-learning,
+    title = "Learning Interpretable Legal Case Retrieval via Knowledge-Guided Case Reformulation",
+    author = "Deng, Chenlong  and
+      Mao, Kelong  and
+      Dou, Zhicheng",
+    editor = "Al-Onaizan, Yaser  and
+      Bansal, Mohit  and
+      Chen, Yun-Nung",
+    booktitle = "Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing",
+    month = nov,
+    year = "2024",
+    address = "Miami, Florida, USA",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.emnlp-main.73",
+    pages = "1253--1265",
+    abstract = "Legal case retrieval for sourcing similar cases is critical in upholding judicial fairness. Different from general web search, legal case retrieval involves processing lengthy, complex, and highly specialized legal documents. Existing methods in this domain often overlook the incorporation of legal expert knowledge, which is crucial for accurately understanding and modeling legal cases, leading to unsatisfactory retrieval performance. This paper introduces KELLER, a legal knowledge-guided case reformulation approach based on large language models (LLMs) for effective and interpretable legal case retrieval. By incorporating professional legal knowledge about crimes and law articles, we enable large language models to accurately reformulate the original legal case into concise sub-facts of crimes, which contain the essential information of the case. Extensive experiments on two legal case retrieval benchmarks demonstrate superior retrieval performance and robustness on complex legal case queries of KELLER over existing methods.",
 }
 ```
