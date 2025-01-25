@@ -110,7 +110,7 @@ class KELLER(nn.Module):
             else:
                 loss = self.loss_fct(masked_final_scores, torch.arange(0, query_reps.shape[0], query_reps.shape[0]/batch_size, dtype=torch.long, device=final_scores.device))
             return SequenceClassifierOutput(
-                loss=fine_grained_loss
+                loss=loss+fine_grained_loss
             )
         
         else:
